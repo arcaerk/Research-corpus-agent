@@ -1,4 +1,4 @@
-# M.Tech AI Research Agent: Full-Stack RAG Architecture
+#  AI Research Agent: Full-Stack RAG Architecture
 
 This repository contains a full-stack Retrieval-Augmented Generation (RAG) application built for ARXIV research papers. The system operates as an autonomous agent capable of retrieving, reading, and synthesizing complex ArXiv machine learning papers to answer user queries, complete with citations and automated self-correction.
 
