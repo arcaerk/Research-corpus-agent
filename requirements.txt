@@ -1,0 +1,27 @@
+# --- Web Framework (main.py) ---
+fastapi
+uvicorn
+pydantic
+
+# --- Agent Architecture (agent.py, retriever.py) ---
+langgraph
+langchain
+langchain-core
+langchain-classic
+
+# --- LLM Providers (agent.py) ---
+langchain-openai
+langchain-huggingface
+
+# --- Vector DB & Retrieval (retriever.py, ingest.py) ---
+chromadb
+langchain-chroma
+langchain-community
+langchain-text-splitters
+sentence-transformers
+rank_bm25
+
+# --- Data Processing & Utilities (ingest.py, evaluate.py) ---
+datasets
+python-dotenv
+tqdm

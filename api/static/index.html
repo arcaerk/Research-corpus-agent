@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ArXiv AI Research Agent</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .chat-container { width: 100%; max-width: 900px; background: white; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: flex; flex-direction: column; height: 90vh; }
+        .chat-header { background: #2c3e50; color: white; padding: 20px; border-radius: 10px 10px 0 0; text-align: center; font-size: 1.2rem; font-weight: bold; }
+        .chat-box { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; }
+        .message { max-width: 85%; padding: 15px 20px; border-radius: 8px; line-height: 1.6; position: relative; }
+        .user-msg { background: #3498db; color: white; align-self: flex-end; border-bottom-right-radius: 0; }
+        .bot-msg { background: #ecf0f1; color: #2c3e50; align-self: flex-start; border-bottom-left-radius: 0; border: 1px solid #dcdde1; }
+        
+        /* Sources Styling */
+        .sources-section { margin-top: 15px; padding-top: 10px; border-top: 1px dashed #bdc3c7; }
+        .sources-title { font-weight: bold; font-size: 0.9rem; color: #2c3e50; margin-bottom: 5px; display: block; }
+        .sources-list { margin: 0; padding-left: 20px; font-size: 0.85rem; color: #7f8c8d; font-style: italic; }
+        
+        .meta-data { font-size: 0.75rem; color: #95a5a6; margin-top: 10px; text-transform: uppercase; letter-spacing: 0.5px; border-top: 1px solid #eee; padding-top: 5px; }
+        .input-area { padding: 20px; border-top: 1px solid #ddd; display: flex; gap: 10px; background: #fff; border-radius: 0 0 10px 10px; }
+        input[type="text"] { flex: 1; padding: 12px; border: 1px solid #ccc; border-radius: 5px; font-size: 1rem; outline: none; }
+        input[type="text"]:focus { border-color: #3498db; }
+        button { padding: 12px 24px; background: #2c3e50; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 1rem; font-weight: 600; transition: background 0.3s; }
+        button:hover { background: #1a252f; }
+        button:disabled { background: #95a5a6; cursor: not-allowed; }
+        .loading { align-self: flex-start; color: #34495e; font-style: italic; display: none; margin-bottom: 10px; font-size: 0.9rem; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <div class="chat-header">ArXiv AI Research Agent</div>
+    <div class="chat-box" id="chat-box">
+        <div class="message bot-msg">Welcome, Raghav. I am your specialized research assistant. Ask me anything about Machine Learning or Artificial Intelligence.</div>
+    </div>
+    <div class="loading" id="loading">✨ Agent is searching ArXiv and synthesizing findings...</div>
+    <div class="input-area">
+        <input type="text" id="user-input" placeholder="e.g., Compare the efficiency of Reformer and Linformer..." onkeypress="handleKeyPress(event)">
+        <button id="send-btn" onclick="sendMessage()">Send</button>
+    </div>
+</div>
+
+<script>
+    async function sendMessage() {
+        const inputField = document.getElementById('user-input');
+        const chatBox = document.getElementById('chat-box');
+        const loadingIndicator = document.getElementById('loading');
+        const sendBtn = document.getElementById('send-btn');
+        const text = inputField.value.trim();
+        
+        if (!text) return;
+
+        // 1. Add User Message to UI
+        addMessage(text, 'user-msg');
+        inputField.value = '';
+        
+        // 2. Show Loading State
+        loadingIndicator.style.display = 'block';
+        sendBtn.disabled = true;
+
+        try {
+            // 3. POST to FastAPI
+            const response = await fetch('/api/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ query: text })
+            });
+            
+            const data = await response.json();
+            
+            // 4. Build the HTML content for the bot response
+            let botHtml = `<div>${data.answer.replace(/\n/g, '<br>')}</div>`;
+
+            // Add the Sources list if available
+            if (data.sources && data.sources.length > 0) {
+                botHtml += `<div class="sources-section">`;
+                botHtml += `<span class="sources-title">Sources Consulted:</span>`;
+                botHtml += `<ul class="sources-list">`;
+                data.sources.forEach(source => {
+                    botHtml += `<li>${source}</li>`;
+                });
+                botHtml += `</ul></div>`;
+            }
+
+            // Add Metadata footer
+            botHtml += `<div class="meta-data">Decision: ${data.critic_decision} | Queries: ${data.search_plan.length}</div>`;
+            
+            // 5. Add Bot Message to UI
+            addMessage(botHtml, 'bot-msg', true);
+
+        } catch (error) {
+            console.error(error);
+            addMessage("Error: The backend server is not responding.", 'bot-msg');
+        } finally {
+            // 6. Reset UI
+            loadingIndicator.style.display = 'none';
+            sendBtn.disabled = false;
+            inputField.focus();
+        }
+    }
+
+    function addMessage(content, className, isHTML = false) {
+        const chatBox = document.getElementById('chat-box');
+        const div = document.createElement('div');
+        div.className = `message ${className}`;
+        if (isHTML) div.innerHTML = content;
+        else div.textContent = content;
+        chatBox.appendChild(div);
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') sendMessage();
+    }
+</script>
+
+</body>
+</html>
